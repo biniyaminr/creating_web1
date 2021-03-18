@@ -1,42 +1,43 @@
+// @ts-nocheck
 'use strict';
-const autoprefixer = require('autoprefixer')
-const fs = require('fs');
-const packageJSON = require('../package.json');
-const path = require('path');
-const postcss = require('postcss')
-const sass = require('sass');
-const sh = require('shelljs');
+import autoprefixer from 'autoprefixer';
+import { writeFileSync } from 'fs';
+import { title, version, homepage, author, license, name } from '../package.json';
+import { resolve, dirname } from 'path';
+import postcss from 'postcss';
+import { renderSync } from 'sass';
+import { test, mkdir } from 'shelljs';
 
 const stylesPath = '../src/scss/styles.scss';
-const destPath = path.resolve(path.dirname(__filename), '../dist/css/styles.css');
+const destPath = resolve(dirname(__filename), '../dist/css/styles.css');
 
-module.exports = function renderSCSS() {
+export default function renderSCSS() {
     
-    const results = sass.renderSync({
+    const results = renderSync({
         data: entryPoint,
         includePaths: [
-            path.resolve(path.dirname(__filename), '../node_modules')
+            resolve(dirname(__filename), '../node_modules')
         ],
       });
 
-    const destPathDirname = path.dirname(destPath);
-    if (!sh.test('-e', destPathDirname)) {
-        sh.mkdir('-p', destPathDirname);
+    const destPathDirname = dirname(destPath);
+    if (!test('-e', destPathDirname)) {
+        mkdir('-p', destPathDirname);
     }
 
     postcss([ autoprefixer ]).process(results.css, {from: 'styles.css', to: 'styles.css'}).then(result => {
         result.warnings().forEach(warn => {
             console.warn(warn.toString())
         })
-        fs.writeFileSync(destPath, result.css.toString());
+        writeFileSync(destPath, result.css.toString());
     })
 
 };
 
 const entryPoint = `/*!
-* Start Bootstrap - ${packageJSON.title} v${packageJSON.version} (${packageJSON.homepage})
-* Copyright 2013-${new Date().getFullYear()} ${packageJSON.author}
-* Licensed under ${packageJSON.license} (https://github.com/StartBootstrap/${packageJSON.name}/blob/master/LICENSE)
+* Start Bootstrap - ${title} v${version} (${homepage})
+* Copyright 2013-${new Date().getFullYear()} ${author}
+* Licensed under ${license} (https://github.com/StartBootstrap/${name}/blob/master/LICENSE)
 */
 @import "${stylesPath}"
 `
